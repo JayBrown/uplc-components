@@ -1,6 +1,10 @@
 * build uplcd
+
 * copy uplcd in /usr/local/bin
 * copy uplcr in /usr/local/bin
+
+* add /bin/sh to TCC's Full Disk Access List (if applicable on your system)
+
 * copy local.lcars.uplcd.plist in ~/Library/LaunchAgents
 * load/start the LaunchAgent
 

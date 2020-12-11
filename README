@@ -1,0 +1,7 @@
+* build uplcd
+* copy uplcd in /usr/local/bin
+* copy uplcr in /usr/local/bin
+* copy local.lcars.uplcd.plist in ~/Library/LaunchAgents
+* load/start the LaunchAgent
+
+* add original DMG basename to dotfile .uplc_rename in the root of the DMG volume

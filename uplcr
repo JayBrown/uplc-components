@@ -1,0 +1,106 @@
+#!/bin/zsh
+# shellcheck shell=bash
+
+# uplcr v0.1.0
+
+export LANG=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+export LC_ALL=C
+export SYSTEM_VERSION_COMPAT=0
+export PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/opt/sw/bin:/opt/sw/sbin
+
+version="0.1.0"
+
+echo "********************************"
+echo "*** Uploha Companion Renamer ***"
+echo "********************************"
+echo "v$version"
+localdate=$(date)
+echo "Local date: $localdate"
+
+_uplcd-watch () {
+	while read notification
+	do
+		if [[ $notification == "Listening..." ]] ; then
+			echo "uplcd is running..."
+			continue
+		elif [[ $notification == "Stopping..." ]] ; then
+			echo "uplcd has exited."
+			break
+		else # try to rename DMG
+			currentdate=$(date)
+			echo "*** Notification date: $currentdate ***"
+			volpath=$(echo "$notification" | awk -F"] " '{print $NF}' | sed 's-/$--')
+			if ! [[ $volpath ]] || [[ $volpath != "/"* ]] ; then
+				echo "[$currentdate] no volume path in notification" >&2
+				continue
+			fi
+			echo "Accessing: $volpath"
+			renamefilepath="$volpath/$renamefile"
+
+			originalfilename=$(cat "$renamefilepath" 2>/dev/null)
+			if ! [[ $originalfilename ]] ; then
+				echo "No original basename information detected: skipping..."
+				continue
+			else
+				originalfilename=$(basename "$originalfilename")
+				echo "Original basename specified: $originalfilename"
+			fi
+
+			targetpath=$(hdiutil info | grep -e "^image-path" -e "$volpath$" | grep -B1 "$volpath$" | awk -F": " '/^image-path/{print $NF}')
+			if ! [[ $targetpath ]] ; then
+				echo "[$currentdate] no target path in hdiutil info" >&2
+				continue
+			else
+				if [[ $targetpath != "/"* ]] ; then
+					echo "[$currentdate] no proper target path in hdiutil info" >&2
+					continue
+				fi
+			fi
+	
+			echo "Targeting: $targetpath"
+			
+			if ! [[ -f "$targetpath" ]] ; then
+				echo "[$currentdate] no file at target path" >&2
+				continue
+			fi
+			
+			currentfilename=$(basename "$targetpath")
+			if [[ $currentfilename == "$originalfilename" ]] ; then
+				echo "File already has the correct name: skipping..."
+				continue
+			fi
+
+			if ! [[ -w "$targetpath" ]] ; then
+				echo "[$currentdate] target file not writable" >&2
+				continue
+			fi
+	
+			parentdir=$(dirname "$targetpath")
+			if ! [[ -w "$parentdir" ]] ; then
+				echo "[$currentdate] target's parent directory not writable" >&2
+				continue
+			fi
+			destinationpath="$parentdir/$originalfilename"
+			echo "Moving to: $destinationpath"
+			if [[ -e "$destinationpath" ]] ; then
+				echo "[$currentdate] file already exists at destination path" >&2
+				continue
+			fi
+			
+			if mv -f "$targetpath" "$destinationpath" &>/dev/null ; then
+				echo "Success!"
+			else
+				echo "[$currentdate] could not rename: $targetpath" >&2
+			fi
+		fi
+	done
+}
+
+echo "Waiting for volume mounts..."
+renamefile=".uplc_rename"
+_uplcd-watch
+
+echo "*** Exiting... ***"
+killall uplcd 2>/dev/null
+exit 0

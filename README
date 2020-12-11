@@ -1,11 +1,12 @@
 * build uplcd
 
-* copy uplcd in /usr/local/bin
-* copy uplcr in /usr/local/bin
+* copy uplcd into /usr/local/bin
+* copy uplcr into /usr/local/bin
 
 * add /bin/sh to TCC's Full Disk Access List (if applicable on your system)
 
 * copy local.lcars.uplcd.plist in ~/Library/LaunchAgents
-* load/start the LaunchAgent
+* load the LaunchAgent
 
 * add original DMG basename to dotfile .uplc_rename in the root of the DMG volume
+* alternatively: use "testimage_renamed.dmg" in this repository
